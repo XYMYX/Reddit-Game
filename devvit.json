@@ -1,0 +1,68 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "xymyx-game",
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "entry": "splash.html",
+        "inline": true
+      },
+      "game": {
+        "entry": "index.html"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "Create eXploit post",
+        "description": "Post the eXploit game",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-create"
+      }
+    ]
+  },
+  "triggers": {
+    "onAppInstall": "/internal/triggers/on-app-install"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "settings": {
+    "global": {
+      "dailySeed": {
+        "type": "string",
+        "label": "Daily seed (secret)",
+        "helpText": "Random string, at least 32 characters. Never commit it.",
+        "isSecret": true
+      }
+    }
+  },
+  "dev": {
+    "subreddit": "xymyx_game_dev"
+  },
+  "scheduler": {
+    "tasks": {
+      "daily-post": {
+        "endpoint": "/internal/scheduler/daily-post",
+        "cron": "0 0 * * *"
+      }
+    }
+  },
+  "permissions": {
+    "reddit": {
+      "enable": true,
+      "scope": "user",
+      "asUser": [
+        "SUBMIT_COMMENT"
+      ]
+    }
+  }
+}
