@@ -36,7 +36,7 @@ You need to be logged in to Reddit to play. Logged-out visitors can still see th
 1. Install the app in your subreddit.
 2. When the app is installed, it creates its first game post automatically. Moderators can make more from the subreddit menu with **Create eXploit post**.
 3. A new **Daily eXploit** post is created automatically every day at 00:00 UTC.
-4. The developer has to set a secret once, for the daily puzzle (see below). Without it, Endless works but Daily shows "not configured".
+4. Nothing else to configure. The daily puzzle works right away (see the secret below).
 
 ## Fair play and security
 
@@ -44,7 +44,7 @@ The game is built like a CTF target, because players will try to break it:
 
 - Passwords are created and checked **on the server only**. The client gets the profile, the password length and the feedback. It never gets the answer (only after the round is over).
 - Feedback, score, unlocks and the leaderboard are all calculated on the server. The client cannot submit a score.
-- The daily puzzle comes from a **secret setting** combined with the date. The source code is public, but the secret is not, so nobody can work out future puzzles.
+- The daily puzzle comes from a **secret** combined with the date. The source code is public, but the secret is not, so nobody can work out future puzzles. The secret is the `dailySeed` app setting. If it is not set, the server creates a random secret once per installation and keeps it in Redis.
 - Endless levels use a random seed created on the server for each level.
 - Requests are locked per user, so sending parallel requests does not give extra tries.
 
@@ -67,7 +67,7 @@ npm run gen -- --play      # play in the terminal
 npm run dev                # playtest on Reddit
 ```
 
-Set the daily secret (once, after the first `devvit upload` or playtest):
+Optional: set the daily secret (once, after the first `devvit upload` or playtest). Without it, each subreddit gets its own random secret, so the daily puzzle differs between subreddits. With it, every subreddit gets the same daily puzzle:
 
 ```
 openssl rand -hex 32           # generate a value
