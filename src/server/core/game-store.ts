@@ -20,14 +20,28 @@ export const dailyDifficulty = (date: string): Difficulty => {
   return 'hard';
 };
 
-/** Daily seed = HMAC(secret app setting, date). Without the secret nobody can precompute it. */
-export const dailySeed = async (date: string): Promise<string> => {
-  const secret = await settings.get<string>('dailySeed');
-  if (typeof secret !== 'string' || secret.length < 32) {
-    throw new ConfigError('Daily puzzle is not configured yet');
-  }
-  return createHmac('sha256', secret).update(`daily|${date}`).digest('hex');
+const SECRET_KEY = 'config:dailySecret';
+
+/**
+ * Secret for the daily seed: the `dailySeed` app setting if it is set, otherwise a random
+ * secret that is generated once and kept in Redis (server-only, never sent to the client).
+ */
+const dailySecret = async (): Promise<string> => {
+  const fromSettings = await settings.get<string>('dailySeed').catch(() => undefined);
+  if (typeof fromSettings === 'string' && fromSettings.length >= 32) return fromSettings;
+
+  const stored = await redis.get(SECRET_KEY);
+  if (stored) return stored;
+  // nx: if two requests race, only the first write wins and both read it back.
+  await redis.set(SECRET_KEY, `${randomUUID()}${randomUUID()}`, { nx: true });
+  const created = await redis.get(SECRET_KEY);
+  if (!created) throw new ConfigError('Daily puzzle is not configured yet');
+  return created;
 };
+
+/** Daily seed = HMAC(secret, date). Without the secret nobody can precompute it. */
+export const dailySeed = async (date: string): Promise<string> =>
+  createHmac('sha256', await dailySecret()).update(`daily|${date}`).digest('hex');
 
 // --- daily
 
